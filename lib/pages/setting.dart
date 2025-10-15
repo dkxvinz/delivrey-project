@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -12,97 +14,43 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-    String role = "user"; // ค่าเริ่มต้น: user
-  File? _imageFile;
-  final ImagePicker _picker = ImagePicker();
-  // Firestore
-  var db = FirebaseFirestore.instance;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body:  
-       Stack(
-        children: [
-          Container(color: const Color(0xFFFF3B30)),
-          Positioned(
-            top: 150,
-            left: 0,
-            right: 0,
-            bottom: 0,
-   
-            // พืื้นหลังสีขาว
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                  Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 20, 20, 0),
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.grey[300],
-                      border: Border.all(color: Colors.white, width: 3),
-                      image: _imageFile != null
-                          ? DecorationImage(
-                              image: FileImage(_imageFile!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    
-                  ),
-                 ),
-                  ],
-
-                ),
-              ),
-            ),
+    return MaterialApp(
+      title: 'Edit Profile',
+      theme: ThemeData(
+        primarySwatch: Colors.red,
+        fontFamily: 'Kanit', // แนะนำให้ใช้ฟอนต์ที่รองรับภาษาไทย
+        scaffoldBackgroundColor: Colors.white,
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide.none,
           ),
-
-          // ข้อความสีแดงด้านบน
-          SafeArea(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 70, 0, 0),
-                  child: Text(
-                    "แก้ไขโปรไฟล์",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      backgroundColor: Color(0xffff3b30)
-                    ),
-                  ),
-                ),
-
-
-              ],
-            ),
-
-
-            
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 12.0,
           ),
-        ],
+        ),
       ),
+      home: const EditProfileScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
+}
 
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
 
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
 
-// ปุ่มยืนยัน
-void _showConfirmationDialog(BuildContext context) {
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  // Function to show the confirmation dialog
+  void _showConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false, // User must tap a button to dismiss
@@ -118,7 +66,11 @@ void _showConfirmationDialog(BuildContext context) {
             ),
           ),
           actionsAlignment: MainAxisAlignment.center,
-          actionsPadding: const EdgeInsets.only(bottom: 20.0, left: 20, right: 20),
+          actionsPadding: const EdgeInsets.only(
+            bottom: 20.0,
+            left: 20,
+            right: 20,
+          ),
           actions: <Widget>[
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -132,7 +84,10 @@ void _showConfirmationDialog(BuildContext context) {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Text('ยืนยัน', style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      'ยืนยัน',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     onPressed: () {
                       // Add logic for confirming changes here
                       Navigator.of(context).pop(); // Close the dialog
@@ -147,9 +102,12 @@ void _showConfirmationDialog(BuildContext context) {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                       padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Text('ยกเลิก', style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      'ยกเลิก',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     onPressed: () {
                       Navigator.of(context).pop(); // Close the dialog
                     },
@@ -163,4 +121,181 @@ void _showConfirmationDialog(BuildContext context) {
     );
   }
 
+  // ตัวแปรสำหรับเก็บพิกัดเริ่มต้น (สามารถเปลี่ยนได้ตามต้องการ)
+  final LatLng initialCenter = LatLng(16.2464, 103.2567);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: Colors.red,
+            expandedHeight: 150.0,
+            pinned: true,
+            shape: const ContinuousRectangleBorder(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(50),
+                bottomRight: Radius.circular(50),
+              ),
+            ),
+            flexibleSpace: const FlexibleSpaceBar(
+              title: Text(
+                'แก้ไขข้อมูลส่วนตัว',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              centerTitle: true,
+              titlePadding: EdgeInsets.only(bottom: 16.0),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  _buildProfilePicture(),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    label: 'ชื่อ',
+                    initialValue: 'จอร์ศักดิ์ นานะ',
+                  ),
+                  _buildTextField(
+                    label: 'อีเมล',
+                    initialValue: 'khajonsak@gmail.com',
+                  ),
+                  _buildTextField(
+                    label: 'หมายเลขโทรศัพท์',
+                    initialValue: '0945364493',
+                  ),
+                  _buildTextField(
+                    label: 'รหัสผ่าน',
+                    hint: 'กรุณากรอกรหัสผ่าน',
+                    obscureText: true,
+                  ),
+                  _buildTextField(label: 'พิกัด GPS'),
+                  const SizedBox(height: 8),
+
+                  SizedBox(
+                    height: 180,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15.0),
+                      child: FlutterMap(
+                        options: MapOptions(
+                          initialCenter: initialCenter,
+                          initialZoom: 15.0,
+                        ),
+                        children: [
+                          TileLayer(urlTemplate: '', userAgentPackageName: ''),
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: initialCenter,
+                                width: 80,
+                                height: 80,
+                                child: Icon(
+                                  Icons.location_on,
+                                  size: 40.0,
+                                  color: Color(0xffff3b30),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      _showConfirmationDialog(
+                        context,
+                      ); // Call the dialog function
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'บันทึก',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfilePicture() {
+    return Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        
+        Container(
+           decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Color(0xffff3b30),
+            width: 4.0,           
+          ),
+          ),
+          child: const CircleAvatar(
+            radius: 60,
+            backgroundImage: NetworkImage(''),
+          
+          ),
+        ),
+        Container(
+          width: 35,
+          height: 35,
+          decoration: BoxDecoration(
+            color: Color(0xffff3b30),
+            shape: BoxShape.circle,
+            border: Border.all(color: Color(0xffff3b30),width: 2.0)
+          ),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    String? initialValue,
+    String? hint,
+    bool obscureText = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: Color(0xffff3b30), fontSize: 16,fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            initialValue: initialValue,
+            obscureText: obscureText,
+            decoration: InputDecoration(
+              hintText: hint,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                borderSide: BorderSide(color: Colors.black54, width: 2.0),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
