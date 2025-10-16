@@ -341,7 +341,7 @@ class _DetailorderState extends State<Detailorder> {
                                             ),
                                             const SizedBox(height: 10),
 
-                                            // 🔹 Dropdown แบบพอดีกับกล่อง
+                                            // Dropdown แบบพอดีกับกล่อง
                                             Container(
                                               width: double.infinity,
                                               padding:
@@ -524,30 +524,30 @@ class _DetailorderState extends State<Detailorder> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xffff3b30),
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'ประวัติการสั่ง',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'รายการสินค้า',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'ตั้งค่า'),
-        ],
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   type: BottomNavigationBarType.fixed,
+      //   backgroundColor: Colors.white,
+      //   selectedItemColor: const Color(0xffff3b30),
+      //   unselectedItemColor: Colors.grey,
+      //   currentIndex: _currentIndex,
+      //   onTap: (index) {
+      //     setState(() {
+      //       _currentIndex = index;
+      //     });
+      //   },
+      //   items: const [
+      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.history),
+      //       label: 'ประวัติการสั่ง',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.list_alt),
+      //       label: 'รายการสินค้า',
+      //     ),
+      //     BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'ตั้งค่า'),
+      //   ],
+      // ),
     );
   }
 

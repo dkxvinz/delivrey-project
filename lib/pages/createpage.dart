@@ -12,13 +12,15 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 class Createpage extends StatefulWidget {
-  const Createpage({super.key});
+  final String uid;
+  const Createpage({super.key,required this.uid});
 
   @override
   State<Createpage> createState() => _CreatepageState();
 }
 
 class _CreatepageState extends State<Createpage> {
+
   final TextEditingController _searchController =
       TextEditingController(); //for search
 
@@ -584,7 +586,7 @@ class _CreatepageState extends State<Createpage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => Homepage(),
+                                          builder: (context) => Homepage(uid:widget.uid, aid: '',),
                                         ),
                                       );
                                     },
@@ -777,30 +779,30 @@ class _CreatepageState extends State<Createpage> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xffff3b30),
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'ประวัติการสั่ง',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'รายการสินค้า',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'ตั้งค่า'),
-        ],
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   type: BottomNavigationBarType.fixed,
+      //   backgroundColor: Colors.white,
+      //   selectedItemColor: const Color(0xffff3b30),
+      //   unselectedItemColor: Colors.grey,
+      //   currentIndex: _currentIndex,
+      //   onTap: (index) {
+      //     setState(() {
+      //       _currentIndex = index;
+      //     });
+      //   },
+      //   items: const [
+      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.history),
+      //       label: 'ประวัติการสั่ง',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.list_alt),
+      //       label: 'รายการสินค้า',
+      //     ),
+      //     BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'ตั้งค่า'),
+      //   ],
+      // ),
     );
   }
 }

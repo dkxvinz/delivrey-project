@@ -8,7 +8,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -38,6 +41,11 @@ class _RegisterPageState extends State<RegisterPage> {
   // Map
   final mapController = MapController();
   LatLng? selectedLocation;
+  @override
+  void initState() {
+    super.initState();
+    _determinePosition(); // 🔹เรียกหาตำแหน่งปัจจุบันทันทีที่เปิดหน้า
+  }
 
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(
@@ -46,6 +54,20 @@ class _RegisterPageState extends State<RegisterPage> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  File? _vehicleImageFile;
+
+  Future<void> _pickVehicleImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery, // หรือ ImageSource.camera
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _vehicleImageFile = File(pickedFile.path);
+        vehiclePhotoCtl.text = pickedFile.path; // เก็บ path ไว้ใน controller
       });
     }
   }
@@ -160,6 +182,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   // เฉพาะ role = user → มีแผนที่
                   if (role == "user") ...[
                     _buildTextField("ที่อยู่", "ที่อยู่", controller: adddress),
+
                     // const Text(
                     //   "เลือกที่อยู่บนแผนที่",
                     //   style: TextStyle(
@@ -174,8 +197,13 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: FlutterMap(
                         mapController: mapController,
                         options: MapOptions(
-                          initialCenter: LatLng(15.8700317, 100.99254),
-                          initialZoom: 15.0,
+                          initialCenter:
+                              selectedLocation ??
+                              LatLng(
+                                16.1831,
+                                103.3020,
+                              ), // 🔹 ถ้ามี location ใช้ของจริง
+                          initialZoom: 15.2,
                           onTap: (tapPosition, point) async {
                             setState(() {
                               selectedLocation = point;
@@ -206,7 +234,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             urlTemplate:
                                 'https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=d7b6821f750e49e2864ef759ef2223ec',
                             userAgentPackageName: 'com.example.my_rider',
-                            maxNativeZoom: 19,
+                            maxNativeZoom: 18,
                           ),
                           if (selectedLocation != null)
                             MarkerLayer(
@@ -227,26 +255,60 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     // ฟิลด์โชว์ lat/lng
-                    _buildTextField(
-                      "ละติจูด",
-                      "Latitude",
-                      controller: latitude,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildTextField(
-                      "ลองจิจูด",
-                      "Longitude",
-                      controller: longitude,
-                    ),
+                    // _buildTextField(
+                    //   "ละติจูด",
+                    //   "Latitude",
+                    //   controller: latitude,
+                    // ),
+                    // const SizedBox(height: 10),
+                    // _buildTextField(
+                    //   "ลองจิจูด",
+                    //   "Longitude",
+                    //   controller: longitude,
+                    // ),
                     const SizedBox(height: 20),
                   ],
 
                   // เฉพาะ role = rider → ฟิลด์เพิ่ม
                   if (role == "rider") ...[
-                    _buildTextField(
-                      "รูปถ่ายพาหนะ",
-                      "กรุณาอัปโหลดรูปถ่ายพาหนะ",
-                      controller: vehiclePhotoCtl,
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "รูปถ่ายพาหนะ",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFFF3B30),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    GestureDetector(
+                      onTap: _pickVehicleImage,
+                      child: Container(
+                        height: 150,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.red),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.grey[200],
+                          image: _vehicleImageFile != null
+                              ? DecorationImage(
+                                  image: FileImage(_vehicleImageFile!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: _vehicleImageFile == null
+                            ? const Center(
+                                child: Icon(
+                                  Icons.add_a_photo,
+                                  color: Colors.red,
+                                  size: 40,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                     const SizedBox(height: 15),
                     _buildTextField(
@@ -288,12 +350,13 @@ class _RegisterPageState extends State<RegisterPage> {
                       const Text("หากเป็นสมาชิกแล้ว?"),
                       InkWell(
                         onTap: () {
-                          Navigator.pop(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginPage(),
-                            ),
-                          );
+                          // Navigator.pop(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => const LoginPage(),
+                          //   ),
+                          // );
+                          Get.to(() => LoginPage());
                         },
                         child: const Text(
                           ' เข้าสู่ระบบ',
@@ -380,35 +443,108 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // เพิ่มข้อมูลเข้า Firestore
+
+  // ฟังก์ชันเข้ารหัสรหัสผ่านด้วย SHA256
+  String hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   void adddata() async {
     try {
       String collectionName = role == "rider" ? "riders" : "users";
 
-      // ข้อมูลผู้ใช้พื้นฐาน
+      String email = emailCtl.text.trim();
+      String phone = phoneCtl.text.trim();
+
+      // -----------------------------
+      // ✅ ตรวจสอบ email/phone ซ้ำในทั้ง users และ riders
+      // -----------------------------
+      var emailInUsers = await db
+          .collection("users")
+          .where('email', isEqualTo: email)
+          .get();
+
+      var emailInRiders = await db
+          .collection("riders")
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (emailInUsers.docs.isNotEmpty || emailInRiders.docs.isNotEmpty) {
+        Get.snackbar('ผิดพลาด', 'อีเมลนี้ถูกใช้แล้ว');
+        return;
+      }
+
+      var phoneInUsers = await db
+          .collection("users")
+          .where('phone', isEqualTo: phone)
+          .get();
+
+      var phoneInRiders = await db
+          .collection("riders")
+          .where('phone', isEqualTo: phone)
+          .get();
+
+      if (phoneInUsers.docs.isNotEmpty || phoneInRiders.docs.isNotEmpty) {
+        Get.snackbar('ผิดพลาด', 'เบอร์โทรศัพท์นี้ถูกใช้แล้ว');
+        return;
+      }
+
+      // -----------------------------
+      // ✅ อัปโหลดรูปโปรไฟล์
+      // -----------------------------
+      String? profileUrl;
+      if (_imageFile != null) {
+        profileUrl = await uploadToCloudinary(_imageFile!);
+        if (profileUrl == null) {
+          Get.snackbar('ผิดพลาด', 'อัปโหลดรูปโปรไฟล์ไม่สำเร็จ');
+          return;
+        }
+      }
+
+      // -----------------------------
+      // ✅ เตรียมข้อมูลพื้นฐาน (hash password ก่อนเก็บ)
+      // -----------------------------
       var userData = {
         'role': role,
-        'email': emailCtl.text.trim(),
-        'password': passwordCtl.text.trim(),
-        'phone': phoneCtl.text.trim(),
+        'email': email,
+        'password': hashPassword(passwordCtl.text.trim()), // เก็บแบบ hash
+        'phone': phone,
         'fullname': fullnameCtl.text.trim(),
+        'profile_photo': profileUrl,
         'created_at': FieldValue.serverTimestamp(),
       };
 
-      // เพิ่มฟิลด์สำหรับ rider
+      // -----------------------------
+      // ✅ กรณี rider → อัปโหลดรูปพาหนะ
+      // -----------------------------
       if (role == "rider") {
+        String? vehicleUrl;
+        if (_vehicleImageFile != null) {
+          vehicleUrl = await uploadToCloudinary(_vehicleImageFile!);
+          if (vehicleUrl == null) {
+            Get.snackbar('ผิดพลาด', 'อัปโหลดรูปรถไม่สำเร็จ');
+            return;
+          }
+        }
+
         userData.addAll({
           'vehicle_number': vehicleNumberCtl.text.trim(),
-          'vehicle_photo': vehiclePhotoCtl.text.trim(),
+          'vehicle_photo': vehicleUrl,
         });
       }
 
-      // สร้างผู้ใช้
+      // -----------------------------
+      // ✅ บันทึก Firestore
+      // -----------------------------
       DocumentReference userDocRef = await db
           .collection(collectionName)
           .add(userData);
-      log("สมัครสมาชิกสำเร็จ: ${userDocRef.id}");
 
-      // ถ้าเป็น user เพิ่ม address
+      // -----------------------------
+      // ✅ ถ้าเป็น user → บันทึกที่อยู่
+      // -----------------------------
       if (role == "user" && selectedLocation != null) {
         var addressData = {
           'userId': userDocRef.id,
@@ -417,19 +553,80 @@ class _RegisterPageState extends State<RegisterPage> {
           'longitude': longitude.text.trim(),
           'created_at': FieldValue.serverTimestamp(),
         };
-
         await db.collection("addresses").add(addressData);
-        log("เพิ่ม address สำเร็จสำหรับ user: ${userDocRef.id}");
       }
 
       Get.snackbar('สำเร็จ', 'สมัครสมาชิกเรียบร้อย');
-      Navigator.pop(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      Get.to(() => const LoginPage());
     } catch (e) {
       log("เกิดข้อผิดพลาด: $e");
       Get.snackbar('ผิดพลาด', e.toString());
+    }
+  }
+
+  Future<void> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      Get.snackbar("ผิดพลาด", "กรุณาเปิด GPS");
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        Get.snackbar("ผิดพลาด", "ไม่ได้รับสิทธิ์การเข้าถึงตำแหน่ง");
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      Get.snackbar("ผิดพลาด", "ไม่ได้รับสิทธิ์ถาวร");
+      return;
+    }
+
+    // ดึงตำแหน่งปัจจุบัน
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    setState(() {
+      selectedLocation = LatLng(position.latitude, position.longitude);
+      latitude.text = position.latitude.toString();
+      longitude.text = position.longitude.toString();
+    });
+
+    // ย้ายกล้องไปตำแหน่งนั้น
+  mapController.move(LatLng(position.latitude, position.longitude), 16);
+  }
+
+  Future<String?> uploadToCloudinary(File imageFile) async {
+    try {
+      const cloudName = "dywfdy174";
+      const uploadPreset = "flutter_upload";
+
+      final url = Uri.parse(
+        "https://api.cloudinary.com/v1_1/$cloudName/image/upload",
+      );
+
+      var request = http.MultipartRequest("POST", url)
+        ..fields['upload_preset'] = uploadPreset
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        var responseData = await response.stream.bytesToString();
+        var jsonData = jsonDecode(responseData);
+        return jsonData['secure_url']; // ✅ ได้ URL กลับมา
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Upload error: $e");
+      return null;
     }
   }
 }

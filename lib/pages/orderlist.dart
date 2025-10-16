@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class OrderlistPage extends StatefulWidget {
-  const OrderlistPage({super.key});
+  const OrderlistPage({super.key, required String uid});
 
   @override
   State<OrderlistPage> createState() => _OrderlistPageState();

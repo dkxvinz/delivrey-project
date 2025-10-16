@@ -12,7 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Homepage extends StatefulWidget {
-  const Homepage({super.key});
+  final String uid,aid;
+  
+  const Homepage({super.key, required this.uid,required this.aid});
 
   @override
   State<Homepage> createState() => _HomepageState();
@@ -20,26 +22,32 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   int _currentIndex = 0;
+  late final List<Widget> _pages;
 
-  final List<Widget> _pages = [
-   HomeContent(),
-   Historypage(),
-   OrderlistPage(),
-   SettingPage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+
+    // 2. ย้ายโค้ดการสร้างลิสต์มาไว้ที่นี่
+    // ณ จุดนี้ เราสามารถเข้าถึง `widget.uid` ได้แล้ว
+    _pages = [
+      HomeContent(uid: widget.uid),
+      Historypage(uid: widget.uid),
+      OrderlistPage(uid: widget.uid),
+      SettingPage(uid: widget.uid,), // ✅ ทำงานได้อย่างถูกต้อง
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xffff3b30),
         unselectedItemColor: Colors.grey,
-        
-      
+
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
           BottomNavigationBarItem(
@@ -51,9 +59,9 @@ class _HomepageState extends State<Homepage> {
             label: 'รายการสินค้า',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'ตั้งค่า'),
-        ],  
+        ],
         currentIndex: _currentIndex,
-        onTap: ( int index) {
+        onTap: (int index) {
           setState(() {
             _currentIndex = index;
             log(_currentIndex.toString());
@@ -65,14 +73,15 @@ class _HomepageState extends State<Homepage> {
 }
 
 class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
+  final String uid;
+  const HomeContent({super.key, required this.uid});
 
   @override
   State<HomeContent> createState() => _HomeContentState();
 }
 
 class _HomeContentState extends State<HomeContent> {
-    String role = "user"; // ค่าเริ่มต้น: user
+  String role = "user"; // ค่าเริ่มต้น: user
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
   // Firestore
@@ -81,8 +90,7 @@ class _HomeContentState extends State<HomeContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:  
-       Stack(
+      body: Stack(
         children: [
           Container(color: const Color(0xFFFF3B30)),
           Positioned(
@@ -90,7 +98,7 @@ class _HomeContentState extends State<HomeContent> {
             left: 0,
             right: 0,
             bottom: 0,
-   
+
             // พืื้นหลังสีขาว
             child: Container(
               decoration: BoxDecoration(
@@ -108,11 +116,20 @@ class _HomeContentState extends State<HomeContent> {
                       padding: const EdgeInsets.only(top: 10),
                       child: TextButton(
                         onPressed: () async {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const Createpage()),);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Createpage(uid: widget.uid),
+                            ),
+                          );
                         },
                         child: Text(
                           "ส่งสินค้า",
-                          style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         style: TextButton.styleFrom(
                           fixedSize: Size(300, 50),
@@ -120,44 +137,44 @@ class _HomeContentState extends State<HomeContent> {
                         ),
                       ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                         Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: TextButton(
-                        onPressed: () async {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const SendingStatus()),);
-                        },
-                        child: Text(
-                          "สินค้ากำลังจัดส่ง",
-                          style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
-                        ),
-                        style: TextButton.styleFrom(
-                          fixedSize: Size(170, 50),
-                          backgroundColor: Color(0xffff3b30),
-                        ),
-                      ),
-                    ),
-                      // const SizedBox(width: 10,),
-                     Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: TextButton(
-                        onPressed: () async {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ReceivingStatus()),);
-                        },
-                        child: Text(
-                          "สินค้าที่รอรับ",
-                          style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
-                        ),
-                        style: TextButton.styleFrom(
-                          fixedSize: Size(170, 50),
-                          backgroundColor: Color(0xffff3b30),
-                        ),
-                      ),
-                    ),
-                      ],
-                    )
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    //   children: [
+                    //      Padding(
+                    //   padding: const EdgeInsets.only(top: 10),
+                    //   child: TextButton(
+                    //     onPressed: () async {
+                    //       Navigator.push(context, MaterialPageRoute(builder: (context) => const SendingStatus()),);
+                    //     },
+                    //     child: Text(
+                    //       "สินค้ากำลังจัดส่ง",
+                    //       style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
+                    //     ),
+                    //     style: TextButton.styleFrom(
+                    //       fixedSize: Size(170, 50),
+                    //       backgroundColor: Color(0xffff3b30),
+                    //     ),
+                    //   ),
+                    // ),
+                    //   // const SizedBox(width: 10,),
+                    //  Padding(
+                    //   padding: const EdgeInsets.only(top: 10),
+                    //   child: TextButton(
+                    //     onPressed: () async {
+                    //       Navigator.push(context, MaterialPageRoute(builder: (context) => const ReceivingStatus()),);
+                    //     },
+                    //     child: Text(
+                    //       "สินค้าที่รอรับ",
+                    //       style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
+                    //     ),
+                    //     style: TextButton.styleFrom(
+                    //       fixedSize: Size(170, 50),
+                    //       backgroundColor: Color(0xffff3b30),
+                    //     ),
+                    //   ),
+                    // ),
+                    //   ],
+                    // )
                   ],
                 ),
               ),
