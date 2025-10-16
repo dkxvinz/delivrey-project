@@ -3,6 +3,12 @@
 
 # blink_delivery_project
 
+git add .
+git commit -m “change function b”
+git push
+
+https://github.com/dkxvinz/delivrey-project.git
+
 A new Flutter project.
 
 ## Getting Started
