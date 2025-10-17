@@ -35,7 +35,7 @@ class _CreatepageState extends State<Createpage> {
 
   bool isCreate = false; //check create button
 
-  int _currentIndex = 0; //rout page of menu ber
+  int _currentIndex = 0; //rout page of menu bar
 
   void dispose() {
     detailCtl.dispose();

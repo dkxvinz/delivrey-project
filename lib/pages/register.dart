@@ -454,7 +454,6 @@ class _RegisterPageState extends State<RegisterPage> {
   void adddata() async {
     try {
       String collectionName = role == "rider" ? "riders" : "users";
-
       String email = emailCtl.text.trim();
       String phone = phoneCtl.text.trim();
 

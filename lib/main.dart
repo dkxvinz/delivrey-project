@@ -1,4 +1,6 @@
 import 'package:blink_delivery_project/pages/app_page.dart';
+import 'package:blink_delivery_project/pages/homepage.dart';
+import 'package:blink_delivery_project/pages/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +38,12 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,textTheme: GoogleFonts.notoSansThaiTextTheme()
       ),
     
-      home: AppPage(),
+      home: LoginPage(),
+      //  routes: {
+      //   '/login': (context) =>  LoginPage(),
+      //   '/home': (context) => AppBar(),
+      // },
+
     );
   }
 }

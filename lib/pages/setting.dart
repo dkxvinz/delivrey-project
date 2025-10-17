@@ -1,12 +1,17 @@
 import 'dart:io';
 import 'package:blink_delivery_project/pages/EditProfile.dart';
+import 'package:blink_delivery_project/pages/addressesPage.dart';
+import 'package:blink_delivery_project/pages/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
 
 class SettingPage extends StatefulWidget {
   final String uid;
-  const SettingPage({super.key, required this.uid});
+  final String aid;
+  const SettingPage({super.key, required this.uid, required this.aid});
+  
 
   @override
   State<SettingPage> createState() => _SettingPageState();
@@ -16,7 +21,9 @@ class _SettingPageState extends State<SettingPage> {
   String? _userName;
   String? _userEmail;
   String? _profileImageUrl;
-  bool _isLoading = true; 
+  bool _isLoading = true;
+  
+  var aid; 
   @override
   void initState() {
     super.initState();
@@ -37,7 +44,10 @@ class _SettingPageState extends State<SettingPage> {
           _userName = userDoc.get('fullname'); 
           _userEmail = userDoc.get('email'); 
           _profileImageUrl = userDoc.get('profile_photo'); 
+        
           _isLoading = false;
+
+         
         });
       } else {
         print("User document does not exist");
@@ -57,7 +67,7 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('โปรไฟล์', style: TextStyle(color: Colors.white)),
+        title: Text('การตั้งค่า', style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
         iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Color(0xffff3b30),
       ),
@@ -67,14 +77,14 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
   
-  // แยก Widget เนื้อหาออกมาเพื่อความสะอาด
+  
   Widget buildProfileContent() {
     return Container(
       color: Color(0xffff3b30),
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.85, 
+          height: MediaQuery.of(context).size.height *0.73, 
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -91,7 +101,7 @@ class _SettingPageState extends State<SettingPage> {
                   backgroundImage: _profileImageUrl != null
                       ? NetworkImage(_profileImageUrl!)
                       : null,
-                  child: _profileImageUrl == null
+                      child: _profileImageUrl == null
                       ? Icon(Icons.person, size: 60, color: Colors.grey.shade400)
                       : null,
                 ),
@@ -133,12 +143,7 @@ class _SettingPageState extends State<SettingPage> {
                           icon: Icons.person_outline,
                           title: 'แก้ไขข้อมูลส่วนตัว',
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => Editprofile(uid: widget.uid),
-                              ),
-                            );
+                            Get.to(Editprofile(uid: widget.uid));
                             print('Go to Edit Profile Page');
                           },
                         ),
@@ -147,7 +152,7 @@ class _SettingPageState extends State<SettingPage> {
                           icon: Icons.location_on_outlined,
                           title: 'เพิ่มที่อยู่',
                           onTap: () {
-                            print('Go to Add Address Page');
+                            Get.to(DisplayAddress(uid: widget.uid,aid: widget.aid, addresses: '', latitude: '', longitude: '',));
                           },
                         ),
                       ],
@@ -204,15 +209,17 @@ class _SettingPageState extends State<SettingPage> {
         actions: [
           TextButton(
             child: const Text('ยกเลิก', style: TextStyle(color: Colors.grey)),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Get.back()
+            
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('ยืนยัน', style: TextStyle(color: Colors.white)),
-            onPressed: () {
-              // TODO: ใส่ Logic การออกจากระบบจริงที่นี่
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
               print('Logged out!');
-              Navigator.of(context).pop();
+
+             Get.offAll(LoginPage());
             },
           ),
         ],
@@ -240,4 +247,4 @@ class _SettingPageState extends State<SettingPage> {
   }
   
 }
-// --- สิ้นสุดส่วนที่ไม่มีการแก้ไข ---
+// 

@@ -28,13 +28,12 @@ class _HomepageState extends State<Homepage> {
   void initState() {
     super.initState();
 
-    // 2. ย้ายโค้ดการสร้างลิสต์มาไว้ที่นี่
-    // ณ จุดนี้ เราสามารถเข้าถึง `widget.uid` ได้แล้ว
+    
     _pages = [
       HomeContent(uid: widget.uid),
       Historypage(uid: widget.uid),
       OrderlistPage(uid: widget.uid),
-      SettingPage(uid: widget.uid,), // ✅ ทำงานได้อย่างถูกต้อง
+      SettingPage(uid: widget.uid, aid: widget.aid,), 
     ];
   }
 

@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -22,7 +23,7 @@ class Editprofile extends StatefulWidget {
 }
 
 class _EditprofileState extends State<Editprofile> {
-  // STEP 1: เตรียม State Controllers และตัวแปร
+ 
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _emailController;
   late TextEditingController _nameController;
@@ -37,15 +38,14 @@ class _EditprofileState extends State<Editprofile> {
   final mapController = MapController();
   LatLng? selectedLocation;
 
-  // String? _imageUrl; //put
-  bool _isLoading = true; // เริ่มต้นให้เป็น true เพื่อแสดงสถานะโหลด
 
+  bool _isLoading = true; 
   final ImagePicker _picker = ImagePicker();
 
-  String? _imageUrl; // ดึงมา
+  String? _imageUrl; 
   File? _newImageFile;
   
-  String? aid; //เก็บใหม่
+  String? aid;
 
   // Future<void> _pickImage() async {
   //   final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery,);
@@ -122,7 +122,6 @@ class _EditprofileState extends State<Editprofile> {
 
   @override
   void dispose() {
-    // คืน memory เมื่อปิดหน้า
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -134,13 +133,12 @@ class _EditprofileState extends State<Editprofile> {
 //ดึงมาโชว์
   Future<void> _fetchUserData() async {
   try {
-    // ดึงข้อมูล user หลัก
+  
     DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.uid)
         .get();
 
-    // ดึงข้อมูล address ทั้งหมด
     QuerySnapshot addressSnapshot = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.uid)
@@ -157,13 +155,13 @@ class _EditprofileState extends State<Editprofile> {
         _passwordController.text = data['password'] ?? '';
         _imageUrl = data['profile_photo'];
 
-        // โหลดที่อยู่ล่าสุด (สมมติใช้ address ตัวแรก)
+       
         if (addressSnapshot.docs.isNotEmpty) {
           var addrData = addressSnapshot.docs.first.data() as Map<String, dynamic>;
           addresses.text = addrData['address'] ?? '';
           latitude.text = addrData['latitude'].toString();
           longitude.text = addrData['longitude'].toString();
-          aid = addressSnapshot.docs.first.id; // เก็บ id address ไว้ใช้ตอน update
+          aid = addressSnapshot.docs.first.id; 
         }
         _isLoading = false;
       });
@@ -175,7 +173,6 @@ class _EditprofileState extends State<Editprofile> {
 }
 
 
-  // ฟังก์ชันสำหรับบันทึกข้อมูลที่แก้ไขแล้ว
  Future<void> _updateUserData() async {
   if (_formKey.currentState!.validate()) {
     try {
@@ -186,7 +183,6 @@ class _EditprofileState extends State<Editprofile> {
 
       final userRef = FirebaseFirestore.instance.collection('users').doc(widget.uid);
 
-      // อัปเดตข้อมูลผู้ใช้หลัก
       await userRef.update({
         'email': _emailController.text,
         'fullname': _nameController.text,
@@ -195,7 +191,7 @@ class _EditprofileState extends State<Editprofile> {
         'profile_photo': imageUrl,
       });
 
-      // อัปเดตที่อยู่
+     
       if (aid != null) {
         await userRef.collection('addresses').doc(aid).update({
           'address': addresses.text,
@@ -203,7 +199,7 @@ class _EditprofileState extends State<Editprofile> {
           'longitude': double.tryParse(longitude.text) ?? 0,
         });
       } else {
-        // ถ้ายังไม่มี address ให้สร้างใหม่
+      
         await userRef.collection('addresses').add({
           'address': addresses.text,
           'latitude': double.tryParse(latitude.text) ?? 0,
@@ -214,7 +210,7 @@ class _EditprofileState extends State<Editprofile> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('บันทึกข้อมูลสำเร็จ!')),
       );
-      Navigator.pop(context);
+        Get.back();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
@@ -232,14 +228,14 @@ class _EditprofileState extends State<Editprofile> {
           content: const Text('คุณต้องการบันทึกการเปลี่ยนแปลงใช่หรือไม่?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () =>Get.back(),
               child: const Text('ยกเลิก'),
             ),
             ElevatedButton(
               onPressed: () {
                 //add data
 
-                Navigator.pop(context);
+                Get.back();
                 _updateUserData();
               },
               child: const Text('ยืนยัน'),
@@ -258,7 +254,7 @@ class _EditprofileState extends State<Editprofile> {
           'แก้ไขข้อมูลส่วนตัว',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.red,
+        backgroundColor: Color(0xffff3b30),
         iconTheme: IconThemeData(color: Colors.white),
       ),
 
@@ -269,109 +265,113 @@ class _EditprofileState extends State<Editprofile> {
   }
 
   Widget buildForm() {
-    // final LatLng initialCenter = LatLng(16.2464, 103.2567);
     return Form(
       key: _formKey,
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  _buildProfilePicture(),
-                  const SizedBox(height: 24),
-                  _buildTextField(label: 'ชื่อ', controller: _nameController),
-                  _buildTextField(label: 'อีเมล', controller: _emailController),
-                  _buildTextField(
-                    label: 'หมายเลขโทรศัพท์',
-                    hint: 'กรอกหมายเลขโทรศัพท์ใหม่',
-                    controller: _phoneController,
-                  ),
-                  _buildTextField(
-                    label: 'รหัสผ่านใหม่',
-                    hint: 'กรอกรหัสผ่านใหม่',
-                    obscureText: true,
-                  ),
-                  _buildTextField(
-                    label: 'พิกัด GPS',
-                    hint: 'คลิกที่แผนที่เพื่อเลือกพิกัดใหม่',
-                    controller: addresses,
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 300,
-                    child: FlutterMap(
-                      mapController: mapController,
-                      options: MapOptions(
-                        initialCenter:
-                            selectedLocation ?? LatLng(16.243998,103.249047),
-                        initialZoom: 15.2,
-                        onTap: (tapPosition, point) async {
+              padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
+              child: Container(
+                child: Column(
+                  children: [
+                _buildProfilePicture(),
+                const SizedBox(height: 24),
+                _buildTextField(label: 'ชื่อ', controller: _nameController),
+                _buildTextField(label: 'อีเมล', controller: _emailController),
+                _buildTextField(
+                  label: 'หมายเลขโทรศัพท์',
+                  hint: 'กรอกหมายเลขโทรศัพท์ใหม่',
+                  controller: _phoneController,
+                ),
+                _buildTextField(
+                  label: 'รหัสผ่านใหม่',
+                  hint: 'กรอกรหัสผ่านใหม่',
+                  obscureText: true,
+                ),
+                _buildTextField(
+                  label: 'พิกัด GPS',
+                  hint: 'คลิกที่แผนที่เพื่อเลือกพิกัดใหม่',
+                  controller: addresses,
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 300,
+                  child: FlutterMap(
+                    mapController: mapController,
+                    options: MapOptions(
+                      initialCenter:
+                          selectedLocation ?? LatLng(16.243998,103.249047),
+                      initialZoom: 15.2,
+                      onTap: (tapPosition, point) async {
+                        setState(() {
+                          selectedLocation = point;
+                          latitude.text = point.latitude.toString();
+                          longitude.text = point.longitude.toString();
+                        });
+                        List<Placemark> placemarks =
+                            await placemarkFromCoordinates(
+                              point.latitude,
+                              point.longitude,
+                            );
+                
+                        if (placemarks.isNotEmpty) {
+                          final place = placemarks.first;
+                          final address =
+                              "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.postalCode}, ${place.country}";
+                
                           setState(() {
-                            selectedLocation = point;
-                            latitude.text = point.latitude.toString();
-                            longitude.text = point.longitude.toString();
+                            addresses.text = address;
                           });
-                          List<Placemark> placemarks =
-                              await placemarkFromCoordinates(
-                                point.latitude,
-                                point.longitude,
-                              );
-
-                          if (placemarks.isNotEmpty) {
-                            final place = placemarks.first;
-                            final address =
-                                "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.postalCode}, ${place.country}";
-
-                            setState(() {
-                              addresses.text = address;
-                            });
-                          }
-                          log("เลือกพิกัด: $point");
-                        },
+                        }
+                        log("เลือกพิกัด: $point");
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=d7b6821f750e49e2864ef759ef2223ec',
+                        userAgentPackageName: 'com.example.my_rider',
+                        maxNativeZoom: 18,
                       ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=d7b6821f750e49e2864ef759ef2223ec',
-                          userAgentPackageName: 'com.example.my_rider',
-                          maxNativeZoom: 18,
-                        ),
-                        if (selectedLocation != null)
-                          MarkerLayer(
-                            markers: [
-                              Marker(
-                                point: selectedLocation!,
-                                width: 40,
-                                height: 40,
-                                child: const Icon(
-                                  Icons.location_on,
-                                  size: 40,
-                                  color: Colors.red,
-                                ),
+                      if (selectedLocation != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: selectedLocation!,
+                              width: 40,
+                              height: 40,
+                              child: const Icon(
+                                Icons.location_on,
+                                size: 40,
+                                color: Colors.red,
                               ),
-                            ],
-                          ),
-                      ],
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _showConfirmationDialog,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _showConfirmationDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'บันทึก',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
+                  child: const Text(
+                    'บันทึก',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
-                ],
+                ),
+                  ],
+                
+                  
+                
+                ),
               ),
             ),
           ),
@@ -391,7 +391,7 @@ class _EditprofileState extends State<Editprofile> {
               title: const Text('เลือกจากคลังภาพ'),
               onTap: () {
                 _pickImage(ImageSource.gallery);
-                Navigator.of(ctx).pop();
+                Get.back();
               },
             ),
             ListTile(
@@ -399,7 +399,7 @@ class _EditprofileState extends State<Editprofile> {
               title: const Text('ถ่ายรูปใหม่'),
               onTap: () {
                 _pickImage(ImageSource.camera);
-                Navigator.of(ctx).pop();
+               Get.back();
               },
             ),
           ],
