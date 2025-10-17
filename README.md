@@ -4,7 +4,7 @@
 # blink_delivery_project
 
 git add ./
-git commit -m “change function b”/
+git commit -m “update”/
 git push origin main/
 
 https://github.com/dkxvinz/delivrey-project.git
