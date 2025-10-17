@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:blink_delivery_project/pages/EditProfile.dart';
 import 'package:blink_delivery_project/pages/addressesPage.dart';
+import 'package:blink_delivery_project/pages/addresses_list_page.dart';
 import 'package:blink_delivery_project/pages/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -152,7 +153,7 @@ class _SettingPageState extends State<SettingPage> {
                           icon: Icons.location_on_outlined,
                           title: 'เพิ่มที่อยู่',
                           onTap: () {
-                            Get.to(DisplayAddress(uid: widget.uid,aid: widget.aid, addresses: '', latitude: '', longitude: '',));
+                            Get.to(AddressesListPage(uid: widget.uid ));
                           },
                         ),
                       ],

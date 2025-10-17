@@ -23,6 +23,7 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   int _currentIndex = 0;
   late final List<Widget> _pages;
+  
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _HomepageState extends State<Homepage> {
       Historypage(uid: widget.uid),
       OrderlistPage(uid: widget.uid),
       SettingPage(uid: widget.uid, aid: widget.aid,), 
+      
     ];
   }
 
