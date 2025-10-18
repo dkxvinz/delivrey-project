@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:blink_delivery_project/pages/EditProfile.dart';
-import 'package:blink_delivery_project/pages/addressesPage.dart';
 import 'package:blink_delivery_project/pages/addresses_list_page.dart';
 import 'package:blink_delivery_project/pages/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -67,130 +66,147 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('การตั้งค่า', style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: Color(0xffff3b30),
-      ),
+      backgroundColor: Color(0xffff3b30),
+      
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : buildProfileContent(),
     );
   }
-  
-  
-  Widget buildProfileContent() {
-    return Container(
-      color: Color(0xffff3b30),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          height: MediaQuery.of(context).size.height *0.73, 
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-          ),
-          child: SingleChildScrollView( 
-            child: Column(
-              children: [
-                SizedBox(height: 30),
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage: _profileImageUrl != null
-                      ? NetworkImage(_profileImageUrl!)
-                      : null,
-                      child: _profileImageUrl == null
-                      ? Icon(Icons.person, size: 60, color: Colors.grey.shade400)
-                      : null,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  _userName ?? 'ไม่พบชื่อผู้ใช้',
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  _userEmail ?? 'ไม่พบอีเมล', 
-                  style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 16),
-                ),
-                SizedBox(height: 30),
-                
-                // --- ส่วนเมนู (ทำงานเหมือนเดิม) ---
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.08),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                        )
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _buildMenuOption(
-                          icon: Icons.person_outline,
-                          title: 'แก้ไขข้อมูลส่วนตัว',
-                          onTap: () {
-                            Get.to(Editprofile(uid: widget.uid));
-                            print('Go to Edit Profile Page');
-                          },
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        _buildMenuOption(
-                          icon: Icons.location_on_outlined,
-                          title: 'เพิ่มที่อยู่',
-                          onTap: () {
-                            Get.to(AddressesListPage(uid: widget.uid ));
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+  Widget buildProfileContent() {
+    return Stack(
+      children: [
+        Container(
+          child: Column(
+            children: [
+              Padding(
+                  padding: const EdgeInsets.only(top:90.0,bottom: 0),
+                    child: Text(
+                      'การตั้งค่า',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  
+                ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10),
                   child: Container(
+                    height: double.infinity,
+                    width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(15.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.08),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                        )
-                      ],
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(30), topRight: Radius.circular(30)),
                     ),
-                    child: _buildMenuOption(
-                      icon: Icons.logout,
-                      title: 'ออกจากระบบ',
-                      textColor: Colors.red,
-                      onTap: () {
-                        _showLogoutDialog(context);
-                      },
+                    child: SingleChildScrollView( 
+                      child: Column(
+                        children: [
+                          SizedBox(height: 30),
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.grey.shade200,
+                            backgroundImage: _profileImageUrl != null
+                                ? NetworkImage(_profileImageUrl!)
+                                : null,
+                                child: _profileImageUrl == null
+                                ? Icon(Icons.person, size: 60, color: Colors.grey.shade400)
+                                : null,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            _userName ?? 'ไม่พบชื่อผู้ใช้',
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            _userEmail ?? 'ไม่พบอีเมล', 
+                            style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16),
+                          ),
+                          SizedBox(height: 30),
+                          
+                          // --- ส่วนเมนู (ทำงานเหมือนเดิม) ---
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.08),
+                                    spreadRadius: 1,
+                                    blurRadius: 10,
+                                  )
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildMenuOption(
+                                    icon: Icons.person_outline,
+                                    title: 'แก้ไขข้อมูลส่วนตัว',
+                                    onTap: () {
+                                      Get.to(Editprofile(uid: widget.uid));
+                                      print('Go to Edit Profile Page');
+                                    },
+                                  ),
+                                  const Divider(height: 1, indent: 16, endIndent: 16),
+                                  _buildMenuOption(
+                                    icon: Icons.location_on_outlined,
+                                    title: 'เพิ่มที่อยู่',
+                                    onTap: () {
+                                      Get.to(AddressesListPage(uid: widget.uid ));
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                                
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.08),
+                                    spreadRadius: 1,
+                                    blurRadius: 10,
+                                  )
+                                ],
+                              ),
+                              child: _buildMenuOption(
+                                icon: Icons.logout,
+                                title: 'ออกจากระบบ',
+                                textColor: Colors.red,
+                                onTap: () {
+                                  _showLogoutDialog(context);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      ),
+      ],
     );
   }
 

@@ -23,7 +23,6 @@ class Editprofile extends StatefulWidget {
 }
 
 class _EditprofileState extends State<Editprofile> {
- 
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _emailController;
   late TextEditingController _nameController;
@@ -38,13 +37,12 @@ class _EditprofileState extends State<Editprofile> {
   final mapController = MapController();
   LatLng? selectedLocation;
 
-
-  bool _isLoading = true; 
+  bool _isLoading = true;
   final ImagePicker _picker = ImagePicker();
 
-  String? _imageUrl; 
+  String? _imageUrl;
   File? _newImageFile;
-  
+
   String? aid;
 
   // Future<void> _pickImage() async {
@@ -130,94 +128,92 @@ class _EditprofileState extends State<Editprofile> {
     super.dispose();
   }
 
-//ดึงมาโชว์
+  //ดึงมาโชว์
   Future<void> _fetchUserData() async {
-  try {
-  
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.uid)
-        .get();
-
-    QuerySnapshot addressSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.uid)
-        .collection('addresses')
-        .get();
-
-    if (userDoc.exists) {
-      final data = userDoc.data() as Map<String, dynamic>;
-
-      setState(() {
-        _nameController.text = data['fullname'] ?? '';
-        _emailController.text = data['email'] ?? '';
-        _phoneController.text = data['phone'] ?? '';
-        _passwordController.text = data['password'] ?? '';
-        _imageUrl = data['profile_photo'];
-
-       
-        if (addressSnapshot.docs.isNotEmpty) {
-          var addrData = addressSnapshot.docs.first.data() as Map<String, dynamic>;
-          addresses.text = addrData['address'] ?? '';
-          latitude.text = addrData['latitude'].toString();
-          longitude.text = addrData['longitude'].toString();
-          aid = addressSnapshot.docs.first.id; 
-        }
-        _isLoading = false;
-      });
-    }
-  } catch (e) {
-    setState(() => _isLoading = false);
-    print("Failed to fetch user data: $e");
-  }
-}
-
-
- Future<void> _updateUserData() async {
-  if (_formKey.currentState!.validate()) {
     try {
-      String? imageUrl = _imageUrl;
-      if (_newImageFile != null) {
-        imageUrl = await uploadImage(_newImageFile!);
-      }
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.uid)
+          .get();
 
-      final userRef = FirebaseFirestore.instance.collection('users').doc(widget.uid);
+      QuerySnapshot addressSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.uid)
+          .collection('addresses')
+          .get();
 
-      await userRef.update({
-        'email': _emailController.text,
-        'fullname': _nameController.text,
-        'password': _passwordController.text,
-        'phone': _phoneController.text,
-        'profile_photo': imageUrl,
-      });
+      if (userDoc.exists) {
+        final data = userDoc.data() as Map<String, dynamic>;
 
-     
-      if (aid != null) {
-        await userRef.collection('addresses').doc(aid).update({
-          'address': addresses.text,
-          'latitude': double.tryParse(latitude.text) ?? 0,
-          'longitude': double.tryParse(longitude.text) ?? 0,
+        setState(() {
+          _nameController.text = data['fullname'] ?? '';
+          _emailController.text = data['email'] ?? '';
+          _phoneController.text = data['phone'] ?? '';
+          _passwordController.text = data['password'] ?? '';
+          _imageUrl = data['profile_photo'];
+
+          if (addressSnapshot.docs.isNotEmpty) {
+            var addrData =
+                addressSnapshot.docs.first.data() as Map<String, dynamic>;
+            addresses.text = addrData['address'] ?? '';
+            latitude.text = addrData['latitude'].toString();
+            longitude.text = addrData['longitude'].toString();
+            aid = addressSnapshot.docs.first.id;
+          }
+          _isLoading = false;
         });
-      } else {
-      
-        await userRef.collection('addresses').add({
-          'address': addresses.text,
-          'latitude': double.tryParse(latitude.text) ?? 0,
-          'longitude': double.tryParse(longitude.text) ?? 0,
-        });
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('บันทึกข้อมูลสำเร็จ!')),
-      );
-        Get.back();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-      );
+      setState(() => _isLoading = false);
+      print("Failed to fetch user data: $e");
     }
   }
-}
+
+  Future<void> _updateUserData() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        String? imageUrl = _imageUrl;
+        if (_newImageFile != null) {
+          imageUrl = await uploadImage(_newImageFile!);
+        }
+
+        final userRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.uid);
+
+        await userRef.update({
+          'email': _emailController.text,
+          'fullname': _nameController.text,
+          'password': _passwordController.text,
+          'phone': _phoneController.text,
+          'profile_photo': imageUrl,
+        });
+
+        if (aid != null) {
+          await userRef.collection('addresses').doc(aid).update({
+            'address': addresses.text,
+            'latitude': double.tryParse(latitude.text) ?? 0,
+            'longitude': double.tryParse(longitude.text) ?? 0,
+          });
+        } else {
+          await userRef.collection('addresses').add({
+            'address': addresses.text,
+            'latitude': double.tryParse(latitude.text) ?? 0,
+            'longitude': double.tryParse(longitude.text) ?? 0,
+          });
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('บันทึกข้อมูลสำเร็จ!')));
+        Get.back();
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('เกิดข้อผิดพลาด: $e')));
+      }
+    }
+  }
 
   void _showConfirmationDialog() {
     showDialog(
@@ -228,7 +224,7 @@ class _EditprofileState extends State<Editprofile> {
           content: const Text('คุณต้องการบันทึกการเปลี่ยนแปลงใช่หรือไม่?'),
           actions: [
             TextButton(
-              onPressed: () =>Get.back(),
+              onPressed: () => Get.back(),
               child: const Text('ยกเลิก'),
             ),
             ElevatedButton(
@@ -249,18 +245,52 @@ class _EditprofileState extends State<Editprofile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xffff3b30),
       appBar: AppBar(
-        title: Text(
-          'แก้ไขข้อมูลส่วนตัว',
-          style: TextStyle(color: Colors.white),
-        ),
+       
         backgroundColor: Color(0xffff3b30),
         iconTheme: IconThemeData(color: Colors.white),
       ),
 
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : buildForm(),
+      body: Stack(
+        children: [
+          Container(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top:20.0,bottom: 10),
+                    child: Text(
+                      'แก้ไขข้อมูลส่วนตัว',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  
+                ),
+                Expanded(
+                  child: Container(
+                    width:  double.infinity,
+                    height: double.infinity,
+
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
+                      color: Color(0xffffffff),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : buildForm(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -275,102 +305,102 @@ class _EditprofileState extends State<Editprofile> {
               child: Container(
                 child: Column(
                   children: [
-                _buildProfilePicture(),
-                const SizedBox(height: 24),
-                _buildTextField(label: 'ชื่อ', controller: _nameController),
-                _buildTextField(label: 'อีเมล', controller: _emailController),
-                _buildTextField(
-                  label: 'หมายเลขโทรศัพท์',
-                  hint: 'กรอกหมายเลขโทรศัพท์ใหม่',
-                  controller: _phoneController,
-                ),
-                _buildTextField(
-                  label: 'รหัสผ่านใหม่',
-                  hint: 'กรอกรหัสผ่านใหม่',
-                  obscureText: true,
-                ),
-                _buildTextField(
-                  label: 'พิกัด GPS',
-                  hint: 'คลิกที่แผนที่เพื่อเลือกพิกัดใหม่',
-                  controller: addresses,
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 300,
-                  child: FlutterMap(
-                    mapController: mapController,
-                    options: MapOptions(
-                      initialCenter:
-                          selectedLocation ?? LatLng(16.243998,103.249047),
-                      initialZoom: 15.2,
-                      onTap: (tapPosition, point) async {
-                        setState(() {
-                          selectedLocation = point;
-                          latitude.text = point.latitude.toString();
-                          longitude.text = point.longitude.toString();
-                        });
-                        List<Placemark> placemarks =
-                            await placemarkFromCoordinates(
-                              point.latitude,
-                              point.longitude,
-                            );
-                
-                        if (placemarks.isNotEmpty) {
-                          final place = placemarks.first;
-                          final address =
-                              "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.postalCode}, ${place.country}";
-                
-                          setState(() {
-                            addresses.text = address;
-                          });
-                        }
-                        log("เลือกพิกัด: $point");
-                      },
+                    _buildProfilePicture(),
+                    const SizedBox(height: 24),
+                    _buildTextField(label: 'ชื่อ', controller: _nameController),
+                    _buildTextField(
+                      label: 'อีเมล',
+                      controller: _emailController,
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=d7b6821f750e49e2864ef759ef2223ec',
-                        userAgentPackageName: 'com.example.my_rider',
-                        maxNativeZoom: 18,
-                      ),
-                      if (selectedLocation != null)
-                        MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: selectedLocation!,
-                              width: 40,
-                              height: 40,
-                              child: const Icon(
-                                Icons.location_on,
-                                size: 40,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ],
+                    _buildTextField(
+                      label: 'หมายเลขโทรศัพท์',
+                      hint: 'กรอกหมายเลขโทรศัพท์ใหม่',
+                      controller: _phoneController,
+                    ),
+                    _buildTextField(
+                      label: 'รหัสผ่านใหม่',
+                      hint: 'กรอกรหัสผ่านใหม่',
+                      obscureText: true,
+                    ),
+                    // _buildTextField(
+                    //   label: 'พิกัด GPS',
+                    //   hint: 'คลิกที่แผนที่เพื่อเลือกพิกัดใหม่',
+                    //   controller: addresses,
+                    // ),
+                    // const SizedBox(height: 8),
+                    // SizedBox(
+                    //   height: 300,
+                    //   child: FlutterMap(
+                    //     mapController: mapController,
+                    //     options: MapOptions(
+                    //       initialCenter:
+                    //           selectedLocation ?? LatLng(16.243998, 103.249047),
+                    //       initialZoom: 15.2,
+                    //       onTap: (tapPosition, point) async {
+                    //         setState(() {
+                    //           selectedLocation = point;
+                    //           latitude.text = point.latitude.toString();
+                    //           longitude.text = point.longitude.toString();
+                    //         });
+                    //         List<Placemark> placemarks =
+                    //             await placemarkFromCoordinates(
+                    //               point.latitude,
+                    //               point.longitude,
+                    //             );
+
+                    //         if (placemarks.isNotEmpty) {
+                    //           final place = placemarks.first;
+                    //           final address =
+                    //               "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.postalCode}, ${place.country}";
+
+                    //           setState(() {
+                    //             addresses.text = address;
+                    //           });
+                    //         }
+                    //         log("เลือกพิกัด: $point");
+                    //       },
+                    //     ),
+                    //     children: [
+                    //       TileLayer(
+                    //         urlTemplate:
+                    //             'https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=d7b6821f750e49e2864ef759ef2223ec',
+                    //         userAgentPackageName: 'com.example.my_rider',
+                    //         maxNativeZoom: 18,
+                    //       ),
+                    //       if (selectedLocation != null)
+                    //         MarkerLayer(
+                    //           markers: [
+                    //             Marker(
+                    //               point: selectedLocation!,
+                    //               width: 40,
+                    //               height: 40,
+                    //               child: const Icon(
+                    //                 Icons.location_on,
+                    //                 size: 40,
+                    //                 color: Colors.red,
+                    //               ),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //     ],
+                    //   ),
+                    // ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _showConfirmationDialog,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xffff3b30),
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _showConfirmationDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'บันทึก',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'บันทึก',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
                   ],
-                
-                  
-                
                 ),
               ),
             ),
@@ -399,7 +429,7 @@ class _EditprofileState extends State<Editprofile> {
               title: const Text('ถ่ายรูปใหม่'),
               onTap: () {
                 _pickImage(ImageSource.camera);
-               Get.back();
+                Get.back();
               },
             ),
           ],
@@ -411,12 +441,11 @@ class _EditprofileState extends State<Editprofile> {
   Widget _buildProfilePicture() {
     ImageProvider? imageProvider;
 
-  if (_newImageFile != null) {
-    imageProvider = FileImage(_newImageFile!);
-
-  } else if (_imageUrl != null && _imageUrl!.isNotEmpty) {
-    imageProvider = NetworkImage(_imageUrl!);
-  }
+    if (_newImageFile != null) {
+      imageProvider = FileImage(_newImageFile!);
+    } else if (_imageUrl != null && _imageUrl!.isNotEmpty) {
+      imageProvider = NetworkImage(_imageUrl!);
+    }
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
@@ -428,10 +457,7 @@ class _EditprofileState extends State<Editprofile> {
             color: Colors.grey,
             border: Border.all(color: Color(0xffff3b30), width: 4),
             image: imageProvider != null
-                ? DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
-                  )
+                ? DecorationImage(image: imageProvider, fit: BoxFit.cover)
                 : null,
           ),
           child: imageProvider == null
@@ -450,8 +476,8 @@ class _EditprofileState extends State<Editprofile> {
             ),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.red,
-              border: Border.all(color: Colors.red, width: 4),
+              color: Color(0xffff3b30),
+              border: Border.all(color: Color(0xffff3b30), width: 4),
             ),
           ),
         ),

@@ -12,9 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Homepage extends StatefulWidget {
-  final String uid,aid;
-  
-  const Homepage({super.key, required this.uid,required this.aid});
+  final String uid, aid;
+
+  const Homepage({super.key, required this.uid, required this.aid});
 
   @override
   State<Homepage> createState() => _HomepageState();
@@ -23,51 +23,63 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   int _currentIndex = 0;
   late final List<Widget> _pages;
-  
 
   @override
   void initState() {
     super.initState();
 
-    
     _pages = [
       HomeContent(uid: widget.uid),
       Historypage(uid: widget.uid),
       OrderlistPage(uid: widget.uid),
-      SettingPage(uid: widget.uid, aid: widget.aid,), 
-      
+      SettingPage(uid: widget.uid, aid: widget.aid),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xffff3b30),
-        unselectedItemColor: Colors.grey,
-
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'ประวัติการสั่ง',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'รายการสินค้า',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'ตั้งค่า'),
-        ],
-        currentIndex: _currentIndex,
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index;
-            log(_currentIndex.toString());
-          });
-        },
+      body: Container(child: _pages[_currentIndex]),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5), // สีเงา
+              spreadRadius: 3,
+              blurRadius: 8, // ความฟุ้งของเงา
+              offset: Offset(0, -2), // y เป็น -3 จะทำให้เงาอยู่ด้านบน
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white, // ต้องเหมือน Container
+          selectedItemColor: const Color(0xffff3b30),
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history),
+              label: 'ประวัติการสั่ง',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.list_alt),
+              label: 'รายการสินค้า',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: 'ตั้งค่า',
+            ),
+          ],
+          currentIndex: _currentIndex,
+          onTap: (int index) {
+            setState(() {
+              _currentIndex = index;
+              log(_currentIndex.toString());
+            });
+          },
+        ),
       ),
     );
   }
