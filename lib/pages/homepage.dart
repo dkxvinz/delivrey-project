@@ -12,9 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Homepage extends StatefulWidget {
-  final String uid, aid;
+  final String uid, aid,rid;
 
-  const Homepage({super.key, required this.uid, required this.aid});
+  const Homepage({super.key, required this.uid, required this.aid, required this.rid});
 
   @override
   State<Homepage> createState() => _HomepageState();
@@ -31,9 +31,13 @@ class _HomepageState extends State<Homepage> {
     _pages = [
       HomeContent(uid: widget.uid),
       Historypage(uid: widget.uid),
-      OrderlistPage(uid: widget.uid),
+      OrderlistPage(uid: widget.uid,rid: widget.rid,),
       SettingPage(uid: widget.uid, aid: widget.aid),
     ];
+    print('home page');
+    log('uid:${widget.uid}');
+      log('aid:${widget.aid}');
+      log('rid:${widget.rid}');
   }
 
   @override
@@ -77,6 +81,7 @@ class _HomepageState extends State<Homepage> {
             setState(() {
               _currentIndex = index;
               log(_currentIndex.toString());
+        
             });
           },
         ),

@@ -20,63 +20,54 @@ class _HistorypageState extends State<Historypage> {
   }
 
   List<Map<String, dynamic>> ordersList = [];
-  List<Map<String, dynamic>> filteredList = [];
   bool _isLoading = true;
 
 
-  final TextEditingController searchController = TextEditingController();
+  
   Future<void> _fetchOrders() async {
     try {
       final orderSnapshot = await FirebaseFirestore.instance
           .collection('orders').get();
-        final userSnap = await FirebaseFirestore.instance
-          .collection('users').doc(widget.uid).get();
-          if (userSnap.exists) {
-         setState(() {
-            final profile = userSnap.get('profile_photo');
-          print('id user URL: ${widget.uid}');  
-          print('Profile URL: $profile');
-          _isLoading = false;
-         });
-        }
+     
+        
    
 
       List<Map<String,dynamic>> tempOrder = [];
 
       for (var itemOne in orderSnapshot.docs){
           final orderData = itemOne.data();
-      if(orderData['sender_id'] == widget.uid || orderData['receiver_id'] == widget.uid){
+        if(orderData['sender_id'] == widget.uid || orderData['receiver_id'] == widget.uid){
 
 
-      final senderDoc = await  FirebaseFirestore.instance.collection('users').doc(orderData['sender_id']).get();
-        final receiverDoc = await  FirebaseFirestore.instance.collection('users').doc(orderData['receiver_id']).get();
+        final senderDoc = await  FirebaseFirestore.instance.collection('users').doc(orderData['sender_id']).get();
+          final receiverDoc = await  FirebaseFirestore.instance.collection('users').doc(orderData['receiver_id']).get();
 
-      //   Map<String,dynamic> senderData = {};
-      //   Map<String,dynamic> receiverData = {};
+        //   Map<String,dynamic> senderData = {};
+        //   Map<String,dynamic> receiverData = {};
 
-      // if(senderDoc.exists){ senderData = senderDoc.data()!;}
-      // if(receiverDoc.exists){ receiverData = receiverDoc.data()!;}
+        // if(senderDoc.exists){ senderData = senderDoc.data()!;}
+        // if(receiverDoc.exists){ receiverData = receiverDoc.data()!;}
 
-       tempOrder.add({
-            'order_id': itemOne.id,
-            'item': orderData['items'] ?? [],
-            'sender_name': senderDoc.exists ? senderDoc['fullname'] : null,
-             'sender_phone': senderDoc.exists ? senderDoc['phone'] : null,
+        tempOrder.add({
+              'order_id': itemOne.id,
+              'item': orderData['items'] ?? [],
+              'sender_name': senderDoc.exists ? senderDoc['fullname'] : null,
+              'sender_phone': senderDoc.exists ? senderDoc['phone'] : null,
               'sender_address': orderData['sender_address']??'',
-            'receiver_name': receiverDoc.exists ? receiverDoc['fullname'] : null,
-             'receiver_phone': receiverDoc.exists ? receiverDoc['phone'] : null,
-              'receiver_address': orderData['receiver_address']?? '',
-          });
-        
-      print('All orders: $tempOrder');
+              'receiver_name': receiverDoc.exists ? receiverDoc['fullname'] : null,
+              'receiver_phone': receiverDoc.exists ? receiverDoc['phone'] : null,
+               'receiver_address': orderData['receiver_address']?? '',
+        });
+          
+        print('All orders: $tempOrder');
 
-      }
+        }
     
-      setState(() {
-        ordersList = tempOrder;
-        _isLoading = false;
-      });
-    }
+        setState(() {
+          ordersList = tempOrder;
+          _isLoading = false;
+        });
+      }
       
     } catch (e) {
       print('Error fetching orders: $e');

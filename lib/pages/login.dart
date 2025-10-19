@@ -306,7 +306,7 @@ class _LoginPageState extends State<LoginPage> {
         String uid = query.docs.first.id;
 
         if (isUser) {
-          Get.to(() => Homepage(uid: uid, aid: '',));
+          Get.to(() => Homepage(uid: uid, aid:'' ,rid: '',));
           log('user');
         } else {
           // Get.to(() => HomeriderPage(uid: uid));

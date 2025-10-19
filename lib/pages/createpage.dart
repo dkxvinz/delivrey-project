@@ -583,12 +583,7 @@ class _CreatepageState extends State<Createpage> {
                                 children: [
                                   TextButton(
                                     onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => Homepage(uid:widget.uid, aid: '',),
-                                        ),
-                                      );
+                                      Get.back();
                                     },
                                     style: ButtonStyle(
                                       foregroundColor:
@@ -779,30 +774,7 @@ class _CreatepageState extends State<Createpage> {
           ),
         ],
       ),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   type: BottomNavigationBarType.fixed,
-      //   backgroundColor: Colors.white,
-      //   selectedItemColor: const Color(0xffff3b30),
-      //   unselectedItemColor: Colors.grey,
-      //   currentIndex: _currentIndex,
-      //   onTap: (index) {
-      //     setState(() {
-      //       _currentIndex = index;
-      //     });
-      //   },
-      //   items: const [
-      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'หน้าแรก'),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.history),
-      //       label: 'ประวัติการสั่ง',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.list_alt),
-      //       label: 'รายการสินค้า',
-      //     ),
-      //     BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'ตั้งค่า'),
-      //   ],
-      // ),
+    
     );
   }
 }
