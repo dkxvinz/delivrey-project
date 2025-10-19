@@ -67,21 +67,24 @@ class _OrderlistPageState extends State<OrderlistPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        TextButton(
+                          TextButton(
                           onPressed: () {
                             setState(() {
                               _selectedIndex = 0;
                             });
                           },
                           child: Text(
-                            'สินค้ากำลังได้รับ',
+                            'สินค้าที่เคยได้รับ',
                             style: TextStyle(
                               color: _selectedIndex == 0
-                                  ? Colors.red
+                                  ? Color(0xffff3b30)
                                   : Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
-                          ),
+                          ),style: ButtonStyle(side: WidgetStatePropertyAll(BorderSide(color: Color(0xffff3b30),width: 2)),
+                          foregroundColor:MaterialStateProperty.resolveWith<Color?>(
+                            (states) => states.contains(MaterialState.pressed)? Colors.white:Color(0xffff3b30)
+                          ),backgroundColor:MaterialStateProperty.resolveWith<Color?>((states) =>states.contains(MaterialState.pressed)? Color(0xffff3b30):Colors.white)),
                         ),
                         TextButton(
                           onPressed: () {
@@ -93,17 +96,25 @@ class _OrderlistPageState extends State<OrderlistPage> {
                             'สินค้าที่เคยได้รับ',
                             style: TextStyle(
                               color: _selectedIndex == 1
-                                  ? Colors.red
+                                  ? Color(0xffff3b30)
                                   : Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
-                          ),
+                          ),style: ButtonStyle(side: WidgetStatePropertyAll(BorderSide(color: Color(0xffff3b30),width: 2)),
+                          foregroundColor:MaterialStateProperty.resolveWith<Color?>(
+                            (states) => states.contains(MaterialState.pressed)? Colors.white:Color(0xffff3b30)
+                          ),backgroundColor:MaterialStateProperty.resolveWith<Color?>((states) =>states.contains(MaterialState.pressed)? Color(0xffff3b30):Colors.white)),
                         ),
                       ],
                     ),
                   ),
-
-                  Expanded(child: _pages[_selectedIndex]),
+                 Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 0), // ขยับขึ้น
+                  child: _pages[_selectedIndex],
+                ),
+              ),
+                  
                 ],
               ),
             ),
@@ -243,13 +254,16 @@ class ProductHistoryCard extends StatelessWidget {
             Text("เบอร์โทร: $riderPhone"),
             const Divider(),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                
                 Text(
                   "สถานะ: $status",
                   style: const TextStyle(color: Colors.green),
                 ),
-                TextButton(
+                
+                if(status != 'ไรเดอร์นำส่งสินค้าแล้ว')...[
+                    TextButton(
                   onPressed: () {
                     Get.to(() => ReceivingStatus());
                   },
@@ -270,6 +284,7 @@ class ProductHistoryCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                ]
               ],
             ),
           ],

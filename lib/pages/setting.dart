@@ -22,8 +22,7 @@ class _SettingPageState extends State<SettingPage> {
   String? _userEmail;
   String? _profileImageUrl;
   bool _isLoading = true;
-  
-  var aid; 
+
   @override
   void initState() {
     super.initState();
@@ -259,9 +258,14 @@ class _SettingPageState extends State<SettingPage> {
       ),
       trailing:
           textColor == Colors.red ? null : const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
-    );
-  }
-  
+          onTap: () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        onTap(); // เรียกหลัง frame ปัจจุบัน เพื่อหลีกเลี่ยง context error
+      });
+    },
+  );
 }
+}
+  
+
 // 

@@ -34,10 +34,10 @@ class _HomepageState extends State<Homepage> {
       OrderlistPage(uid: widget.uid,rid: widget.rid,),
       SettingPage(uid: widget.uid, aid: widget.aid),
     ];
-    print('home page');
-    log('uid:${widget.uid}');
-      log('aid:${widget.aid}');
-      log('rid:${widget.rid}');
+    // print('home page');
+    // log('uid:${widget.uid}');
+    //   log('aid:${widget.aid}');
+    //   log('rid:${widget.rid}');
   }
 
   @override
