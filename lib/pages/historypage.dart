@@ -16,7 +16,7 @@ class _HistorypageState extends State<Historypage> {
   @override
   void initState() {
     super.initState();
-    _fetchOrders(); // 🔹 ดึงข้อมูลเมื่อเปิดหน้า
+    _fetchOrders(); 
   }
 
   List<Map<String, dynamic>> ordersList = [];
@@ -27,7 +27,9 @@ class _HistorypageState extends State<Historypage> {
   Future<void> _fetchOrders() async {
     try {
       final orderSnapshot = await FirebaseFirestore.instance
-          .collection('orders').get();
+          .collection('orders')
+          .where('sender_id',isEqualTo:widget.uid)
+          .where('status',isEqualTo: 'ไรเดอร์นำส่งสินค้าแล้ว').get();
      
         
    
@@ -36,17 +38,12 @@ class _HistorypageState extends State<Historypage> {
 
       for (var itemOne in orderSnapshot.docs){
           final orderData = itemOne.data();
-        if(orderData['sender_id'] == widget.uid || orderData['receiver_id'] == widget.uid){
+             if(orderData['sender_id'] == widget.uid || orderData['receiver_id'] == widget.uid){
 
 
         final senderDoc = await  FirebaseFirestore.instance.collection('users').doc(orderData['sender_id']).get();
           final receiverDoc = await  FirebaseFirestore.instance.collection('users').doc(orderData['receiver_id']).get();
 
-        //   Map<String,dynamic> senderData = {};
-        //   Map<String,dynamic> receiverData = {};
-
-        // if(senderDoc.exists){ senderData = senderDoc.data()!;}
-        // if(receiverDoc.exists){ receiverData = receiverDoc.data()!;}
 
         tempOrder.add({
               'order_id': itemOne.id,
@@ -57,11 +54,16 @@ class _HistorypageState extends State<Historypage> {
               'receiver_name': receiverDoc.exists ? receiverDoc['fullname'] : null,
               'receiver_phone': receiverDoc.exists ? receiverDoc['phone'] : null,
                'receiver_address': orderData['receiver_address']?? '',
+              'status': orderData['status']??'',
+
+
         });
           
         print('All orders: $tempOrder');
 
         }
+        
+       
     
         setState(() {
           ordersList = tempOrder;
@@ -121,7 +123,7 @@ class _HistorypageState extends State<Historypage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(
-            height: MediaQuery.of(context).size.height*0.725,
+            height: MediaQuery.of(context).size.height*0.6811,
             width: double.infinity,
             decoration: BoxDecoration(color: Color(0XFFFFFFFF),
             borderRadius: BorderRadius.only(topRight: Radius.circular(20),topLeft: Radius.circular(20)) ),
@@ -150,7 +152,9 @@ class _HistorypageState extends State<Historypage> {
                                       order['receiver_name'] ?? 'ไม่ระบุชื่อผู้รับ',
                                     receiverAddress:
                                       order['receiver_address'] ?? 'ไม่ระบุที่อยู่ผู้รับ',
-                                    receiverPhone: order['receiver_phone'] ?? '-',
+                                    receiverPhone: order['receiver_phone'] ?? '-', 
+                                    status: order['status'] ?? 'ไม่มีสเตตัส',
+                                    
                                 ),
                               );
                             }).toList(),
@@ -172,6 +176,8 @@ class _HistorypageState extends State<Historypage> {
     required String receiverName,
     required String receiverAddress,
     required String receiverPhone,
+    required String status,
+    
   }) {
     return Card(
       elevation: 2,
@@ -185,45 +191,66 @@ class _HistorypageState extends State<Historypage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10.0),
-                  child: Image.network(
-                    imageUrl.isNotEmpty
-                        ? imageUrl :imageUrl,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 80,
-              height: 80,
-              color: Colors.grey[200],
-              child: const Icon(
-                Icons.image_not_supported,
-                color: Colors.grey,
-                size: 40,
-              ),
-            );
-          },
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10.0),
+                      child: Image.network(
+                        imageUrl.isNotEmpty
+                            ? imageUrl :imageUrl,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.grey[200],
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey,
+                    size: 40,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    itemDetail,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                );
+                          },
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          itemDetail,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          
+                        ),
+                      
+                      ],
+                    ),
+                    
+                  ],
                 ),
+                SizedBox(height: 10,),
+                 Row(
+                      children: [
+                        Text('สถานะ:'),
+                        // SizedBox(width:5,),
+                        Text(status, style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.green,fontWeight: FontWeight.bold,
+                          ),),
+                      ],
+                    )
               ],
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12.0),
+              padding: EdgeInsets.symmetric(vertical: 0.0),
               child: Divider(),
             ),
             _buildAddressInfo(
@@ -233,11 +260,11 @@ class _HistorypageState extends State<Historypage> {
               phone: senderPhone,
             ),
              const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12.0),
+              padding: EdgeInsets.symmetric(vertical:0.0),
               child: Divider(),
             ),
             
-            const SizedBox(height: 12),
+            const SizedBox(height: 5),
             _buildAddressInfo(
               title: 'ผู้รับ:',
               name: receiverName,

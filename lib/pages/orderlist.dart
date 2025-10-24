@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+
 import 'package:blink_delivery_project/pages/receiving_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,8 @@ import 'package:image_picker/image_picker.dart';
 class OrderlistPage extends StatefulWidget {
   final String uid;
   final String rid;
-  const OrderlistPage({super.key, required this.uid, required this.rid});
+  final String oid;
+  const OrderlistPage({super.key, required this.uid, required this.rid, required this.oid});
 
   @override
   State<OrderlistPage> createState() => _OrderlistPageState();
@@ -27,7 +29,7 @@ class _OrderlistPageState extends State<OrderlistPage> {
   void initState() {
     super.initState();
     _pages = <Widget>[
-      InTransitTab(uid: widget.uid, rid: widget.rid),
+      InTransitTab(uid: widget.uid, rid: widget.rid, oid:widget.oid,),
       ReceivedTab(uid: widget.uid, rid: widget.rid),
     ];
   }
@@ -74,7 +76,7 @@ class _OrderlistPageState extends State<OrderlistPage> {
                             });
                           },
                           child: Text(
-                            'สินค้าที่เคยได้รับ',
+                            'สินค้ากำลังมาส่ง',
                             style: TextStyle(
                               color: _selectedIndex == 0
                                   ? Color(0xffff3b30)
@@ -173,6 +175,9 @@ class ProductHistoryCard extends StatelessWidget {
   final String riderPhone;
   final String status;
   final dynamic createAt;
+  final String uid;
+  final String rid;
+  final String oid;
 
   const ProductHistoryCard({
     super.key,
@@ -184,16 +189,18 @@ class ProductHistoryCard extends StatelessWidget {
     required this.riderName,
     required this.riderPhone,
     required this.status,
-    required this.createAt,
+    required this.createAt, 
+    required this.uid, 
+    required this.rid, 
+    required this.oid,
   });
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
-    // String formattedDate = '';
-    // if (createAt is Timestamp) {
-    //   formattedDate = createAt.toDate().toString().substring(0, 16);
-    // }
-
     return Card(
       elevation: 0.5,
       color: Colors.white,
@@ -239,65 +246,82 @@ class ProductHistoryCard extends StatelessWidget {
             ),
             const SizedBox(height: 12.0),
             const Divider(),
-
             Text(
               "ผู้ส่ง: $senderName",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             Text(senderAddress),
-            Text("โทร: $senderPhone"),
+            Text("เบอร์โทร: $senderPhone"),
             const Divider(),
-            Text(
+
+   
+            
+               Text(
               "ไรเดอร์: $riderName",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             Text("เบอร์โทร: $riderPhone"),
             const Divider(),
+     
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                
-                Text(
-                  "สถานะ: $status",
-                  style: const TextStyle(color: Colors.green),
+                Container(
+                  width: 200,
+                  child: Text(
+                    "สถานะ: $status",
+                    style: const TextStyle(color: Colors.green) ,maxLines: 2,overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                
-                if(status != 'ไรเดอร์นำส่งสินค้าแล้ว')...[
-                    TextButton(
-                  onPressed: () {
-                    Get.to(() => ReceivingStatus());
-                  },
-                  child: Text('รายละเอียด'),
-                  style: ButtonStyle(
-                    side: WidgetStatePropertyAll(
-                      BorderSide(color: Color(0xffff3b30), width: 2),
-                    ),
-                    shape: WidgetStatePropertyAll(
-                      RoundedRectangleBorder(
+                if (status != 'ไรเดอร์นำส่งสินค้าแล้ว' )
+                          TextButton(
+                            onPressed: (){
+                            Navigator.of(context).push(
+                            MaterialPageRoute(
+                            builder: (context) => ReceivingStatus(uid:uid, rid: rid, oid: oid,)) );
+                            print('uid: $uid');
+                            print('rid: $rid');
+                            print('oid: $oid');
+
+                   
+                    },
+
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(
+                        color: Color(0xffff3b30),
+                        width: 2,
+                      ),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    foregroundColor: MaterialStateProperty.resolveWith<Color?>(
-                      (states) => states.contains(MaterialState.pressed)
-                          ? Colors.white
-                          :Colors.red  
-                    ),
+                    child: const Text('รายละเอียด'),
                   ),
-                ),
-                ]
               ],
             ),
-          ],
+
+            ]
+           
+        
         ),
       ),
     );
   }
 }
 
+
+Future<DocumentSnapshot?> safeGetDoc(String collection, String? id) async {
+  if (id == null || id.isEmpty) return null;
+  return FirebaseFirestore.instance.collection(collection).doc(id).get();
+}
+
+
 class InTransitTab extends StatefulWidget {
   final String uid;
   final String rid;
-  const InTransitTab({super.key, required this.uid, required this.rid});
+  final String oid;
+  const InTransitTab({super.key, required this.uid, required this.rid, required this.oid});
 
   @override
   State<InTransitTab> createState() => _InTransitTabState();
@@ -315,67 +339,60 @@ class _InTransitTabState extends State<InTransitTab> {
 
   Future<void> _fetchReceiveOrders() async {
     try {
-      final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-
-      final orderSnapshot = await FirebaseFirestore.instance
-          .collection('orders')
-          .where('createAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('createAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+      final snapshot = await FirebaseFirestore.instance
+          .collection('orders').where('status',isNotEqualTo: 'ไรเดอร์นำส่งสินค้าแล้ว')
           .get();
 
       List<Map<String, dynamic>> tempOrder = [];
 
-      for (var itemOne in orderSnapshot.docs) {
-        final orderData = itemOne.data();
-
-        // if (orderData['status'] == 'ไรเดอร์นำส่งสินค้าแล้ว') continue;
-
-        if (orderData['sender_id'] == widget.uid ||
-            orderData['receiver_id'] == widget.uid ||
-            orderData['rider_id'] == widget.rid) {
-          final senderDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(orderData['sender_id'])
-              .get();
-          final riderDoc = await FirebaseFirestore.instance
-              .collection('riders')
-              .doc(orderData['rider_id'])
-              .get();
-
-          tempOrder.add({
-            'order_id': itemOne.id,
-            'item': orderData['items'] ?? [],
-            'sender_name': senderDoc.exists ? senderDoc['fullname'] : '',
-            'sender_phone': senderDoc.exists ? senderDoc['phone'] : '',
-            'sender_address': orderData['sender_address'] ?? '',
-            'rider_name': riderDoc.exists ? riderDoc['fullname'] : '',
-            'rider_phone': riderDoc.exists ? riderDoc['phone'] : '',
-            'status': orderData['status'] ?? '',
-            'createAt': orderData['createAt'] ?? '',
-          });
-
-          log('All Intransit $tempOrder');
-        }
+      for (var orderData in snapshot.docs) {
+  final data = orderData.data();
+  final status = data['status'] ?? '';
+    if (data['receiver_id'] == widget.uid ||
+        data['rider_id'] == widget.rid) {
+ 
+      if ((data['rider_id'] ?? '').isEmpty) {
+        // print('ข้าม order ${orderData.id} เพราะไม่มี rider_id');
+        continue;
       }
+
+      final senderDoc = await safeGetDoc('users', data['sender_id']);
+      final riderDoc = await safeGetDoc('riders', data['rider_id']);
+      
+      print('Fetching rider on orderlist: ${data['rider_id']}');
+      print('Rider exists orderlist: ${riderDoc?.exists}');
+
+      tempOrder.add({
+        'order_id': orderData.id,
+        'item': data['items'] ?? [],
+        'sender_name': senderDoc != null && senderDoc.exists ? senderDoc['fullname']: '',
+        'sender_phone': senderDoc != null && senderDoc.exists ? senderDoc['phone']: '',
+        'sender_address': data['sender_address'] ?? '',
+        'rider_id':data['rider_id']??'',
+        'rider_name': riderDoc != null && riderDoc.exists ? riderDoc['fullname']: '',
+        'rider_phone': riderDoc != null && riderDoc.exists ? riderDoc['phone']: '',
+        'status': status,
+      });
+
+        print('All data : $tempOrder');
+      
+    }
+}
+      
 
       setState(() {
         productReceivedList = tempOrder;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching orders: $e');
+      log('Error fetching orders: $e');
       setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (productReceivedList.isEmpty) {
       return const Center(child: Text('ไม่มีรายการที่อยู่ระหว่างจัดส่ง'));
     }
@@ -384,7 +401,12 @@ class _InTransitTabState extends State<InTransitTab> {
       itemCount: productReceivedList.length,
       itemBuilder: (context, index) {
         var order = productReceivedList[index];
-        final items = order['item'] as List<dynamic>;
+        final items = (order['item'] is List)
+            ? order['item'] as List<dynamic>
+            : <dynamic>[];
+
+        if (items.isEmpty) return const SizedBox.shrink();
+
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -398,7 +420,10 @@ class _InTransitTabState extends State<InTransitTab> {
                 riderName: order['rider_name'] ?? 'ไม่ระบุชื่อ',
                 riderPhone: order['rider_phone'] ?? 'ไม่ระบุเบอร์โทรศัพท์',
                 status: order['status'] ?? '',
-                createAt: order['createAt'] ?? '',
+                createAt: order['createAt'] ?? '', 
+                uid:widget.uid,   
+                rid: order['rider_id'] ?? '', 
+                oid: order['order_id'] ?? '',   
               );
             }).toList(),
           ),
@@ -407,6 +432,7 @@ class _InTransitTabState extends State<InTransitTab> {
     );
   }
 }
+
 
 class ReceivedTab extends StatefulWidget {
   final String uid;
@@ -436,33 +462,33 @@ class _ReceivedTabState extends State<ReceivedTab> {
 
       List<Map<String, dynamic>> tempOrder = [];
 
-      for (var itemOne in snapshot.docs) {
-        final orderData = itemOne.data();
-
-        if (orderData['sender_id'] == widget.uid ||
-            orderData['receiver_id'] == widget.uid ||
-            orderData['rider_id'] == widget.rid) {
-          final senderDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(orderData['sender_id'])
-              .get();
-          final riderDoc = await FirebaseFirestore.instance
-              .collection('riders')
-              .doc(orderData['rider_id'])
-              .get();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        if ( data['receiver_id'] == widget.uid ||
+            data['rider_id'] == widget.rid) {
+          final senderDoc = await safeGetDoc('users', data['sender_id']);
+          final riderDoc = await safeGetDoc('riders', data['rider_id']);
 
           tempOrder.add({
-            'order_id': itemOne.id,
-            'item': orderData['items'] ?? [],
-            'sender_name': senderDoc.exists ? senderDoc['fullname'] : '',
-            'sender_phone': senderDoc.exists ? senderDoc['phone'] : '',
-            'sender_address': orderData['sender_address'] ?? '',
-            'rider_name': riderDoc.exists ? riderDoc['fullname'] : '',
-            'rider_phone': riderDoc.exists ? riderDoc['phone'] : '',
-            'status': orderData['status'] ?? '',
-            'createAt': orderData['createAt'] ?? '',
+            'order_id': doc.id,
+            'item': data['items'] ?? [],
+            'sender_name': senderDoc != null && senderDoc.exists
+                ? senderDoc['fullname']
+                : '',
+            'sender_phone': senderDoc != null && senderDoc.exists
+                ? senderDoc['phone']
+                : '',
+            'sender_address': data['sender_address'] ?? '',
+            'rider_name': riderDoc != null && riderDoc.exists
+                ? riderDoc['fullname']
+                : '',
+            'rider_phone': riderDoc != null && riderDoc.exists
+                ? riderDoc['phone']
+                : '',
+            'status': data['status'] ?? '',
+            'createAt': data['createAt'] ?? '',
           });
-          log('All received $tempOrder');
+               print('Received data: $tempOrder');
         }
       }
 
@@ -471,17 +497,14 @@ class _ReceivedTabState extends State<ReceivedTab> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching delivered orders: $e');
+      log('Error fetching delivered orders: $e');
       setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (deliveredList.isEmpty) {
       return const Center(child: Text('ยังไม่มีรายการที่จัดส่งสำเร็จ'));
     }
@@ -490,7 +513,12 @@ class _ReceivedTabState extends State<ReceivedTab> {
       itemCount: deliveredList.length,
       itemBuilder: (context, index) {
         var order = deliveredList[index];
-        final items = order['item'] as List<dynamic>;
+        final items = (order['item'] is List)
+            ? order['item'] as List<dynamic>
+            : <dynamic>[];
+
+        if (items.isEmpty) return const SizedBox.shrink();
+
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -504,7 +532,8 @@ class _ReceivedTabState extends State<ReceivedTab> {
                 riderName: order['rider_name'] ?? 'ไม่ระบุชื่อ',
                 riderPhone: order['rider_phone'] ?? 'ไม่ระบุเบอร์โทรศัพท์',
                 status: order['status'] ?? '',
-                createAt: order['createAt'] ?? '',
+                createAt: order['createAt'] ?? '', 
+                uid:widget.uid, rid: widget.rid, oid:'', 
               );
             }).toList(),
           ),

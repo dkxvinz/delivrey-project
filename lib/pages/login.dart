@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:blink_delivery_project/pages/homepage.dart';
+import 'package:blink_delivery_project/pages/homerider.dart';
 import 'package:blink_delivery_project/pages/register.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,7 +10,6 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
 class LoginPage extends StatefulWidget {
-   
   const LoginPage({super.key});
 
   @override
@@ -290,34 +290,39 @@ class _LoginPageState extends State<LoginPage> {
     String password = passwordCtl.text.trim();
 
     try {
-      // แปลง password ที่กรอกเป็น hash
       String hashedPassword = hashPassword(password);
 
-      // ดึงข้อมูลจาก Firestore
       var query = await db
           .collection(collectionName)
           .where('email', isEqualTo: email)
-          .where('password', isEqualTo: hashedPassword) // ✅ ใช้ hash
+          .where('password', isEqualTo: hashedPassword)
           .get();
 
       if (query.docs.isNotEmpty) {
-        // เข้าสู่ระบบสำเร็จ
-        print('Login successful: ${query.docs.first.id}');
         String uid = query.docs.first.id;
+        log('✅ Login successful: $uid');
 
+        if (!mounted) return; // ✅ ป้องกัน context เสีย
+
+        // ✅ ใช้ Navigator โดยตรง (ปลอดภัยกว่าใน async)
         if (isUser) {
-          Get.to(() => Homepage(uid: uid, aid:'' ,rid: '',));
-          log('user');
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => Homepage(uid: uid, aid: '', rid: '', oid: '',),
+            ),
+          );
+          log('➡️ Login as USER');
         } else {
-          // Get.to(() => HomeriderPage(uid: uid));
-          log('rider');
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => HomeriderPage(uid: uid)),
+          );
+          log('➡️ Login as RIDER');
         }
       } else {
-        // ไม่พบผู้ใช้
         Get.snackbar('ผิดพลาด', 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       }
     } catch (e) {
-      print('Login error: $e');
+      log('Login error: $e');
       Get.snackbar('ผิดพลาด', 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
     }
   }
