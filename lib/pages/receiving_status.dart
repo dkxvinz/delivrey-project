@@ -261,7 +261,7 @@ Widget build(BuildContext context) {
 
 //map--------------------------------------------------------------
 class MapReceive extends StatefulWidget {
-  final String uid,rid;
+  final String uid, rid;
   const MapReceive({super.key, required this.uid, required this.rid});
 
   @override
@@ -269,190 +269,117 @@ class MapReceive extends StatefulWidget {
 }
 
 class _MapReceiveState extends State<MapReceive> {
-  Map<String, dynamic>? currentOrder;
   LatLng? riderPos;
   LatLng? receiverPos;
-  double? distanceToRider;
-  Timer? _timer;
   final MapController _mapController = MapController();
 
-
-
   @override
-  void initState() {
-    super.initState();
-    _startDistanceUpdater();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-
- 
-  void _startDistanceUpdater() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (currentOrder != null) {
-        _updateDistance();
-      }
-    });
-  }
-
-
-  void _updateDistance() {
-    if (riderPos != null && receiverPos != null) {
-      distanceToRider = Geolocator.distanceBetween(
-        riderPos!.latitude,
-        riderPos!.longitude,
-        receiverPos!.latitude,
-        receiverPos!.longitude,
-      );
-     
-    }
-  }
-  @override
-Widget build(BuildContext context) {
-  return StreamBuilder<QuerySnapshot>(
-    stream: FirebaseFirestore.instance
-        .collection('orders')
-        .where('status', whereIn: [
-          'รอไรเดอร์รับสินค้า',
-          'ไรเดอร์รับงานแล้ว (กำลังเดินทางไปรับสินค้า)',
-          'ไรเดอร์รับสินค้าแล้ว (กำลังเดินทางไปส่ง)',
-        ])
-        .snapshots(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-        return const Center(child: Text('ไม่มีคำสั่งซื้อที่กำลังจัดส่ง'));
-      }
-
-     
-      final orders = snapshot.data!.docs;
-
-      
-      final List<Marker> markers = [];
-      Marker? myRiderMarker;
-
-      for (var doc in orders) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        if (data['rider_latitude'] == null || data['rider_longitude'] == null) {
-          continue; 
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('orders')
+          .where('receiver_id', isEqualTo: widget.uid)
+          .where('rider_id', isEqualTo: widget.rid)
+          .where('status', whereIn: [
+            'รอไรเดอร์รับสินค้า',
+            'ไรเดอร์รับงานแล้ว (กำลังเดินทางไปรับสินค้า)',
+            'ไรเดอร์รับสินค้าแล้ว (กำลังเดินทางไปส่ง)',
+          ])
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
         }
 
-        final LatLng riderPosition = LatLng(
-          double.tryParse(data['rider_latitude'].toString()) ?? 0,
-          double.tryParse(data['rider_longitude'].toString()) ?? 0,
-        );
-
-        final bool isMyOrder = data['receiver_id'] == widget.uid && data['rider_id'] == widget.rid;
-
-   
-        if (isMyOrder &&
-            data['receiver_latitude'] != null &&
-            data['receiver_longitude'] != null) {
-          receiverPos = LatLng(
-            double.tryParse(data['receiver_latitude'].toString()) ?? 0,
-            double.tryParse(data['receiver_longitude'].toString()) ?? 0,
-          );
-          markers.add(
-            Marker(
-              point: receiverPos!,
-              width: 30,
-              height: 30,
-              child: const Icon(Icons.location_on, color: Colors.blue, size: 30),
-            ),
-          );
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text('ไม่มีคำสั่งซื้อที่กำลังจัดส่ง'));
         }
 
-       if(isMyOrder && data['rider_latitude'] != null && data['rider_longitude'] != null){
-        riderPos = LatLng(double.tryParse(data['rider_latitude'].toString()) ?? 0, double.tryParse(data['rider_longitude'].toString()) ?? 0,);
-        markers.add(
-         myRiderMarker = Marker(
-            point: riderPosition,
-            width: 30,
-            height: 30,
-            child: Icon(
-              Icons.directions_bike_sharp,
-              color: isMyOrder? Colors.red: Colors.grey.shade600,
-              size: 30,
-            ),
-          ),
-        );
-       }
-      // else{
-      //    markers.add(
-      //     Marker(
-      //       point: riderPosition,
-      //       width: 30,
-      //       height: 30,
-      //       child: Icon(
-      //         Icons.directions_bike_sharp,
-      //         color:  Colors.grey.shade600,
-      //         size: 30,
-      //       ),
-      //     ),
-      //   );
+        final orders = snapshot.data!.docs;
+        final List<Marker> markers = [];
 
-      //  }
-        
-      }
-    if (myRiderMarker != null) {
-      markers.add(myRiderMarker);
-     
-    }
+        for (var doc in orders) {
+          final data = doc.data() as Map<String, dynamic>;
 
-      final LatLng initialCenter = receiverPos ?? const LatLng(15.870031, 100.992541);
+          final double? riderLat =
+              double.tryParse(data['rider_latitude']?.toString() ?? '');
+          final double? riderLng =
+              double.tryParse(data['rider_longitude']?.toString() ?? '');
+          final double? receiverLat =
+              double.tryParse(data['receiver_latitude']?.toString() ?? '');
+          final double? receiverLng =
+              double.tryParse(data['receiver_longitude']?.toString() ?? '');
 
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.blueGrey, width: 2),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                spreadRadius: 3,
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              height: 300,
-              child: FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter: initialCenter,
-                  initialZoom: 13,
+          if (riderLat == null ||
+              riderLng == null ||
+              receiverLat == null ||
+              receiverLng == null) continue;
+
+          riderPos = LatLng(riderLat, riderLng);
+          receiverPos = LatLng(receiverLat, receiverLng);
+
+          // Marker Receiver
+          markers.add(Marker(
+            point: receiverPos!,
+            width: 35,
+            height: 35,
+            child: const Icon(Icons.location_on, color: Colors.blue, size: 35),
+          ));
+             // Marker Rider
+          markers.add(Marker(
+            point: riderPos!,
+            width: 35,
+            height: 35,
+            child: const Icon(Icons.directions_bike_sharp, color: Colors.red, size: 35),
+          ));
+
+        }
+
+        final LatLng initialCenter =
+            receiverPos ?? const LatLng(13.736717, 100.523186);
+
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blueGrey, width: 2),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 3,
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-                children: [
-                  TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.rider_app',
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                height: 300,
+                child: FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: initialCenter,
+                    initialZoom: 13,
                   ),
-                  MarkerLayer(markers: markers),
-                ],
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.rider_app',
+                    ),
+                    MarkerLayer(markers: markers),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
+  }
 }
-
-}//end map
+//end map
 
 //order product-----------------------------------------------------------------
 class ProductDetail extends StatefulWidget {
